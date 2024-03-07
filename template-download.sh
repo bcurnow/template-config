@@ -9,8 +9,7 @@ then
   exit 1
 fi
 
-echo "Clearing /opt/template-config"
-rm -rf /opt/template-config
+echo "Ensuring /opt/template-config exists"
 mkdir -p /opt/template-config
 
 echo "Downloading lastest version of the template-config scripts"
