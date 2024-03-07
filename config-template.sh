@@ -226,7 +226,7 @@ echo "Removing template network config"
 rm /etc/systemd/network/*.network
 
 echo "Creating static network config for ens18"
-cat <<EOF > /etc/systemd/network/ens18.network
+cat <<EOF > /etc/systemd/network/10-ens18-dhcp.network
 [Match]
 Name=ens18
 

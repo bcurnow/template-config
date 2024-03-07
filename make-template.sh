@@ -5,50 +5,14 @@
 if [ ${EUID} -eq 0 ]
 then
   echo "This script must not be run as root" >&2
-  echo "Please ensure the following commands are run as the non-root user before executing:"
-  echo "  set +o history # Turns off history for the current shell"
-  echo "  history -c     # Clears current history"
-  echo "This will ensure there's no extraneous command history when the template is cloned"
   exit 1
 fi
 
-echo "Checking /opt/template-config scripts for changes"
-mkdir -p /tmp/template-config
-curl --silent -o /tmp/template-config/make-template.sh --location  https://github.com/bcurnow/utils/raw/main/template-config/make-template.sh
-if [ $? -ne 0 ]
-then
-  echo "Download of make-template.sh failed" >&2
-  exit 1
-fi
-curl --silent -o /tmp/template-config/config-template.sh --location  https://github.com/bcurnow/utils/raw/main/template-config/config-template.sh
-if [ $? -ne 0 ]
-then
-  echo "Download of config-template.sh failed" >&2
-  exit 1
-fi
-
-scripts_changed=false
-diff /opt/template-config/make-template.sh /tmp/template-config/make-template.sh >/dev/null
-if [ $? -ne 0 ]
-then
-  scripts_changed=true
-fi
-
-diff /opt/template-config/config-template.sh /tmp/template-config/config-template.sh >/dev/null
-if [ $? -ne 0 ]
-then
-  scripts_changed=true
-fi
-
-rm -rf /tmp/template-config
-if ${scripts_changed}
-then
-  echo "/opt/template-config scripts changes, can not make templates until the content is synced with GitHub" >&2
-  exit 1
-fi
-
-echo "Clearing /opt/template-config"
-sudo rm -rf /opt/template-config
+echo "Please ensure the following commands are run as the non-root user before executing:"
+echo "  set +o history # Turns off history for the current shell"
+echo "  history -c     # Clears current history"
+echo "This will ensure there's no extraneous command history when the template is cloned"
+read -p "Press any key to continue..." -n 1 -r
 
 echo "Ensuring hostname is 'debian-template'"
 echo "debian-template" | sudo tee /etc/hostname >/dev/null
