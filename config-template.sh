@@ -164,56 +164,32 @@ check_ip_prefix () {
   return 1
 }
 
-check_dns_servers () {
-  local servers=($1)
-
-  if [ ${#servers[@]} -eq 0 ]
-  then
-    echo "You must provide a list of servers" >&2
-    return 1
-  fi
-
-  for i in ${!servers[@]}
-  do
-    echo "Validating DNS server '${servers[i]}'" >&2
-    if ! check_ip_addr ${servers[i]}
-    then
-      return 1
-    fi
-  done
-
-  return 0
-}
-
 if [ ${EUID} -ne 0 ]
 then
   echo "You must run as root" >&2
   exit 1
 fi
 
-dns_servers="10.0.0.100 10.0.0.200"
-gateway=10.0.0.1
-broadcast=10.255.255.255
+dns_server1=10.2.3.10
+dns_server2=10.2.3.11
+gateway=10.2.2.1
 domain=internal.curnowtopia.com
 
 prompt "Enter the new hostname" hostname
 prompt "Enter the new IP address" ip_addr check_ip_addr
-prompt "Enter the IP prefix length" ip_prefix check_ip_prefix "8"
+prompt "Enter the IP prefix length" ip_prefix check_ip_prefix "24"
 prompt "Enter the gatway address" gateway check_ip_addr "${gateway}"
-prompt "Enter the broadcast address" broadcast check_ip_addr "${broadcast}"
-prompt "Enter the DNS servers" dns_servers check_dns_servers "${dns_servers}"
+prompt "Enter the first DNS server" dns_server1 check_ip_addr "${dns_server1}"
+prompt "Enter the second DNS server" dns_server2 check_ip_addr "${dns_server2}"
 prompt "Enter the DNS search domain" domain check_yes "${domain}"
 echo "---"
 echo "New VM config:"
 echo "  IP Address: ${ip_addr}/${ip_prefix}"
 echo "  Gateway: ${gateway}"
-echo "  Broadcast: ${broadcast}"
 echo "  Hostname: ${hostname}"
 echo "  DNS Servers:"
-for dns_server in ${dns_servers}
-do
-  echo "    ${dns_server}"
-done
+echo "    ${dns_server1}"
+echo "    ${dns_server2}"
 echo "  DNS Search Domain: ${domain}"
 echo "---"
 
@@ -226,20 +202,21 @@ echo "Removing template network config"
 rm /etc/systemd/network/*.network
 
 echo "Creating static network config for ens18"
-cat <<EOF > /etc/systemd/network/10-ens18-dhcp.network
+cat <<EOF > /etc/systemd/network/10-ens18.network
 [Match]
 Name=ens18
 
 [Network]
 # Do not provision an ipv6 address
 IPv6LinkLocalAddressGenerationMode=none
+DNS=${dns_server1}
+DNS=${dns_server2}
 
 [Route]
 Gateway=${gateway}
 
 [Address]
 Address=${ip_addr}/${ip_prefix}
-Broadcast=${broadcast}
 EOF
 
 echo "Updating hostname"
@@ -250,14 +227,6 @@ cat <<EOF > /etc/hosts
 127.0.0.1	localhost
 127.0.0.1	${hostname}.${domain}	${hostname}
 EOF
-
-echo "Creating /etc/systemd/resolved.conf"
-echo "[Resolve]" > /etc/systemd/resolved.conf
-for dns_server in ${dns_servers}
-do
-  echo "DNS=${dns_server}" >> /etc/systemd/resolved.conf
-done
-echo "Domains=${domain}" >> /etc/systemd/resolved.conf
 
 echo "Regenerating SSH host keys"
 ssh-keygen -A
