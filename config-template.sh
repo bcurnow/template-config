@@ -211,12 +211,11 @@ Name=ens18
 IPv6LinkLocalAddressGenerationMode=none
 DNS=${dns_server1}
 DNS=${dns_server2}
+Address=${ip_addr}/${ip_prefix}
+Domains=internal.curnowtopia.com
 
 [Route]
 Gateway=${gateway}
-
-[Address]
-Address=${ip_addr}/${ip_prefix}
 EOF
 
 echo "Updating hostname"
