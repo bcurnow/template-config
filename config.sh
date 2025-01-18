@@ -230,10 +230,13 @@ EOF
 echo "Regenerating SSH host keys"
 ssh-keygen -A
 
-echo "Cleaning out /opt/template-config"
-echo "If you need to redownload, run the following:"
-echo "  curl --silent -o /opt/template-config/get-latest-version.sh --location https://github.com/bcurnow/template-config/raw/main/get-latest-version.sh"
-echo "  sudo /opt/template-config/get-latest-version.sh"
+cat <<EOF
+Cleaning out /opt/template-config
+If you need to redownload, run the following:
+  mkdir -p /opt/template-config
+  curl --silent -o /opt/template-config/get-latest-version.sh --location https://github.com/bcurnow/template-config/raw/main/get-latest-version.sh
+  sudo /opt/template-config/get-latest-version.sh
+EOF
 rm -rf /opt/template-config
 
 read -p "Press any key to reboot..." -n 1 -r
