@@ -29,7 +29,7 @@ sudo tee /etc/machine-id >/dev/null </dev/null
 echo "Removing systemd-networkd configurations"
 sudo rm /etc/systemd/network/*.network
 
-echo "Setting up DHCP systemd-networkd configuration"
+echo "Setting up template systemd-networkd configuration"
 sudo tee /etc/systemd/network/template.network >/dev/null << EOF
 [Match]
 Name=ens18
@@ -37,7 +37,13 @@ Name=ens18
 [Network]
 # Do not provision an ipv6 address
 IPv6LinkLocalAddressGenerationMode=none
-DHCP=yes
+Address=10.2.2.224/24
+DNS=10.0.0.3
+DNS=10.0.0.4
+Domains=internal.curnowtopia.com
+
+[Route]
+Gateway=10.2.2.1
 EOF
 
 echo "Clearing SSH keys"
@@ -50,7 +56,7 @@ rm -f ~/.bash_history
 rm -f ~/.lesshst
 rm -rf ~/.local
 
-# Setup authorized key login for the current user
+# Setup authorized key login for my public key
 mkdir -p ~/.ssh
 chmod 700 ~/.ssh
 cat <<EOF >~/.ssh/authorized_keys
@@ -77,22 +83,12 @@ sudo apt-get clean -y
 sudo apt-get autoclean -y
 
 echo "Removing logs"
-sudo rm -f /var/log/boot.log
-sudo rm -f /var/log/cron
-sudo rm -f /var/log/dmesg
-sudo rm -f /var/log/grubby
-sudo rm -f /var/log/lastlog
-sudo rm -f /var/log/maillog
-sudo rm -f /var/log/messages
-sudo rm -f /var/log/secure
-sudo rm -f /var/log/spooler
-sudo rm -f /var/log/tallylog
-sudo rm -f /var/log/wpa_supplicant.log
-sudo rm -f /var/log/wtmp
-sudo rm -f /var/log/yum.log
-sudo rm -f /var/log/audit/audit.log
-sudo rm -f /var/log/ovirt-guest-agent/ovirt-guest-agent.log
-sudo rm -f /var/log/tuned/tuned.log
+sudo rm -f /var/log/*
+sudo rm -f /var/log/private/*
+sudo rm -f /var/log/runit/*
+sudo rm -f /var/log/installer/*
+sudo rm -f /var/log/apt/*
+sudo rm -f /var/log/journal/*
 
 read -p "Press any key to shutdown..." -n 1 -r
 
