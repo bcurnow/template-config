@@ -60,7 +60,7 @@ echo "Cleaning up users"
 for user in ${defaultUser} ansible root
 do
   echo "Clearing ${user} configuration and history"
-  homeDir=$(echo ~${user})
+  homeDir=$(sudo getent passwd ${user}| cut -d: -f6)
 
   for dir in .ssh .local
   do
