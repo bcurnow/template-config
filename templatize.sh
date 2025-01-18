@@ -24,7 +24,7 @@ sudo tee /etc/hosts >/dev/null << EOF
 EOF
 
 echo "Clearing the machine id"
-sudo tee /etc/machine-id >/dev/null </dev/null
+sudo rm -f /etc/machine-id
 
 echo "Removing systemd-networkd configurations"
 sudo rm /etc/systemd/network/*.network
@@ -46,8 +46,9 @@ Domains=internal.curnowtopia.com
 Gateway=10.2.2.1
 EOF
 
-echo "Clearing SSH keys"
+echo "Generating a new SSH keys"
 sudo rm -f /etc/ssh/ssh_host_*
+ssh-keygen -A
 
 echo "Clearing current user configuration and history"
 rm -rf ~/.ssh/
