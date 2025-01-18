@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# To be run after cloning a VM that was prepared with make-template.sh
+# To be run after cloning a VM that was prepared with templatize.sh
 #
 
 prompt () {
@@ -170,8 +170,8 @@ then
   exit 1
 fi
 
-dns_server1=10.2.3.10
-dns_server2=10.2.3.11
+dns_server1=10.0.0.3
+dns_server2=10.0.0.4
 gateway=10.2.2.1
 domain=internal.curnowtopia.com
 
@@ -182,26 +182,27 @@ prompt "Enter the gatway address" gateway check_ip_addr "${gateway}"
 prompt "Enter the first DNS server" dns_server1 check_ip_addr "${dns_server1}"
 prompt "Enter the second DNS server" dns_server2 check_ip_addr "${dns_server2}"
 prompt "Enter the DNS search domain" domain check_yes "${domain}"
-echo "---"
-echo "New VM config:"
-echo "  IP Address: ${ip_addr}/${ip_prefix}"
-echo "  Gateway: ${gateway}"
-echo "  Hostname: ${hostname}"
-echo "  DNS Servers:"
-echo "    ${dns_server1}"
-echo "    ${dns_server2}"
-echo "  DNS Search Domain: ${domain}"
-echo "---"
+cat <<EOF
+---------------------------------------------------------------------------
+New VM Config:
+  IP Address: ${ip_addr}/${ip_prefix}
+  Gateway: ${gateway}
+  Hostname: ${hostname}
+  DNS Servers:
+    ${dns_server1}
+    ${dns_server2}
+  DNS Search Domain: ${domain}
+---------------------------------------------------------------------------
 
 if ! confirm "Is the above correct?"
 then
   exit 1
 fi
 
-echo "Removing template network config"
+echo "Removing existing network config"
 rm /etc/systemd/network/*.network
 
-echo "Creating static network config for ens18"
+echo "Creating network config for ens18"
 cat <<EOF > /etc/systemd/network/10-ens18.network
 [Match]
 Name=ens18
@@ -230,8 +231,11 @@ echo "Regenerating SSH host keys"
 ssh-keygen -A
 
 echo "Cleaning out /opt/template-config"
+echo "If you need to redownload, run the following:"
+echo "  curl --silent -o /opt/template-config/get-latest-version.sh --location https://github.com/bcurnow/template-config/raw/main/get-latest-version.sh"
+echo "  sudo /opt/template-config/get-latest-version.sh"
 rm -rf /opt/template-config
 
 read -p "Press any key to reboot..." -n 1 -r
 
-reboot
+reboot now
