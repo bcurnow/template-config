@@ -13,7 +13,7 @@ echo "Ensuring /opt/template-config exists"
 mkdir -p /opt/template-config
 
 echo "Downloading latest version of the template-config scripts"
-for script in make-template.sh config-template.sh template-download.sh
+for script in templatize.sh config.sh get-latest-version.sh
 do
 echo "Downloading ${script}"
 curl --silent -o /opt/template-config/${script} --location https://github.com/bcurnow/template-config/raw/main/${script}
