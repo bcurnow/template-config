@@ -64,12 +64,12 @@ do
 
   for dir in .ssh .local
   do
-    rm -rf ${homeDir}/${dir}
+    sudo rm -rf ${homeDir}/${dir}
   done
 
   for file in anaconda-ks.cfg .lesshst .bash_history
   do
-    rm -f ${homeDir}/${file}
+    sudo rm -f ${homeDir}/${file}
   done
 done
 
