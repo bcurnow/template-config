@@ -235,6 +235,7 @@ Cleaning out /opt/template-config
 If you need to redownload, run the following:
   sudo mkdir -p /opt/template-config
   sudo curl --silent -o /opt/template-config/get-latest-version.sh --location https://github.com/bcurnow/template-config/raw/main/get-latest-version.sh
+  sudo chmod 755 /opt/template-config/get-latest-version.sh
   sudo /opt/template-config/get-latest-version.sh
 EOF
 rm -rf /opt/template-config
