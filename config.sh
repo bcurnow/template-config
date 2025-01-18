@@ -213,7 +213,7 @@ IPv6LinkLocalAddressGenerationMode=none
 DNS=${dns_server1}
 DNS=${dns_server2}
 Address=${ip_addr}/${ip_prefix}
-Domains=internal.curnowtopia.com
+Domains=${domain}
 
 [Route]
 Gateway=${gateway}
