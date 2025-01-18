@@ -229,6 +229,7 @@ EOF
 
 echo "Regenerating /etc/machine-id"
 /usr/bin/systemd-machine-id-setup
+
 echo "Regenerating SSH host keys"
 ssh-keygen -A
 
