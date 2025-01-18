@@ -241,8 +241,9 @@ If you need to redownload, run the following:
   sudo chmod 755 /opt/template-config/get-latest-version.sh
   sudo /opt/template-config/get-latest-version.sh
 EOF
-rm -rf /opt/template-config
 
 read -p "Press any key to reboot..." -n 1 -r
 
+# We have configured this VM, we can remove template-config
+rm -rf /opt/template-config
 reboot now
