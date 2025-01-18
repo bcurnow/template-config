@@ -62,14 +62,14 @@ do
   echo "Clearing ${user} configuration and history"
   homeDir=$(echo ~${user})
 
-  for file in anaconda-ks.cfg .bash_history .lesshst
-  do
-    rm -f ${homeDir}/${file}
-  done
-
   for dir in .ssh .local
   do
     rm -rf ${homeDir}/${dir}
+  done
+
+  for file in anaconda-ks.cfg .lesshst .bash_history
+  do
+    rm -f ${homeDir}/${file}
   done
 done
 
