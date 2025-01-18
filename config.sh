@@ -227,6 +227,8 @@ cat <<EOF > /etc/hosts
 127.0.0.1	${hostname}.${domain} ${hostname} localhost
 EOF
 
+echo "Regenerating /etc/machine-id"
+/usr/bin/systemd-machine-id-setup
 echo "Regenerating SSH host keys"
 ssh-keygen -A
 
