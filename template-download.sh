@@ -12,7 +12,7 @@ fi
 echo "Ensuring /opt/template-config exists"
 mkdir -p /opt/template-config
 
-echo "Downloading lastest version of the template-config scripts"
+echo "Downloading latest version of the template-config scripts"
 for script in make-template.sh config-template.sh template-download.sh
 do
 echo "Downloading ${script}"
