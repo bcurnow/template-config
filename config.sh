@@ -193,7 +193,7 @@ New VM Config:
     ${dns_server2}
   DNS Search Domain: ${domain}
 ---------------------------------------------------------------------------
-
+EOF
 if ! confirm "Is the above correct?"
 then
   exit 1
