@@ -50,15 +50,21 @@ echo "Generating a new SSH keys"
 sudo rm -f /etc/ssh/ssh_host_*
 sudo ssh-keygen -A
 
+echo "Clearing apt caches"
+sudo apt-get autoremove -y
+sudo apt-get clean -y
+sudo apt-get autoclean -y
+
 echo "Clearing ${defaultUser} user configuration and history"
 rm -rf /home/${defaultUser}/.ssh/
 rm -f /home/${defaultUser}/anaconda-ks.cfg
 rm -f /home/${defaultUser}/bash_history
-rm -f /home/${defaultUser}/lesshst
+rm -f /home/${defaultUser}/.lesshst
 rm -rf /home/${defaultUser}/local
 
 # Setup authorized key login for my public key
 mkdir -p /home/${defaultUser}/ssh
+chown ${defaultUser}:${defaultUser} /home/${defaultUser}/ssh
 chmod 700 /home/${defaultUser}/ssh
 cat <<EOF >/home/${defaultUser}/ssh/authorized_keys
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDJMQ7gGnSRqhGbeiFm3MAfJ2DzJc3UMPBazhZIoXYLbKXaUFKPV2YuvTDeaXEa1UiAoxQJmhq94ABc2kPBfdfPSVd0elOKiKBbdpwO5PrKxK3DpxdX46GgKp0kRW8a3UgAUOuo0nigaEd7pWlkJ8+zxR0aFzfpbRiqIHTT8L3gVsRiQIrs0vkwn7sUMQs7ODJGz2bBuL6aI5aPyiyxoMlLfeo7AabnBIXCM5Bfym6m0/KmUkSugWyOgKXMCscBNiclC3QO/ExjouKnrlXQg9f/+I2J3FAex/QRRl1m7G1NPYygd1NIVcoNCIrU4g5aZkKqCk0DZC08mKVZ2zuRtqaluGMEfYd6LMGXSjuaFYDmtybvwEgvSlT9fkDCZcwF65YBnHXdr/QNWG4D5U3tXh5o4H202o6rsdsVhIsKIAkFqiiiC3yeCWiDVR2wQNENNkMbL/7tZMSqRm31iJjvQNuCBPpu6Z59DNkmZqb8dDgrOyi8SREBKf7FLuKx/jp7R4k= Brian.Curnow@T07M6PT2TT
@@ -77,11 +83,6 @@ sudo rm -f /home/ansible/anaconda-ks.cfg
 sudo rm -f /home/ansible/.bash_history
 sudo rm -f /home/ansible/.lesshst
 sudo rm -rf /home/ansible/.local
-
-echo "Clearing apt caches"
-sudo apt-get autoremove -y
-sudo apt-get clean -y
-sudo apt-get autoclean -y
 
 echo "Removing logs"
 sudo find /var/log/ -type f -exec rm -f {} \;
