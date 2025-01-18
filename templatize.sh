@@ -83,12 +83,7 @@ sudo apt-get clean -y
 sudo apt-get autoclean -y
 
 echo "Removing logs"
-sudo rm -f /var/log/*
-sudo rm -f /var/log/private/*
-sudo rm -f /var/log/runit/*
-sudo rm -f /var/log/installer/*
-sudo rm -f /var/log/apt/*
-sudo rm -f /var/log/journal/*
+sudo find /var/log/ -type f -exec rm -f {} \;
 
 read -p "Press any key to shutdown..." -n 1 -r
 
