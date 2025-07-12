@@ -74,10 +74,11 @@ do
 done
 
 # Setup authorized key login
-mkdir -p /home/${defaultUser}/ssh
-chown ${defaultUser}:${defaultUser} /home/${defaultUser}/ssh
-chmod 700 /home/${defaultUser}/ssh
-cat <<EOF >/home/${defaultUser}/ssh/authorized_keys
+sudo rm -rf /home/${defaultUser}/.ssh
+mkdir -p /home/${defaultUser}/.ssh
+chown ${defaultUser}:${defaultUser} /home/${defaultUser}/.ssh
+chmod 700 /home/${defaultUser}/.ssh
+cat <<EOF >/home/${defaultUser}/.ssh/authorized_keys
 ${authorizedKey}
 EOF
 
