@@ -2,12 +2,13 @@
 #
 # To be run after cloning a VM that was prepared with templatize.sh
 #
+set -euo pipefail
 
 prompt () {
   local prompt=$1
   local result_name=$2
-  local validation_function=$3
-  local default_value=$4
+  local validation_function=${3:-}
+  local default_value=${4:-}
 
   if [ -z "${prompt}" ]
   then
@@ -38,7 +39,7 @@ prompt () {
   do
     read -p "${prompt}: " ${result_name}
 
-    if [ -z "${result_var}" ]
+    if [ -z "${result_var:-}" ]
     then
       if [ -n "${default_value}" ]
       then
@@ -46,14 +47,14 @@ prompt () {
       fi
     fi
 
-    if [ -n "${result_var}" ]
+    if [ -n "${result_var:-}" ]
     then
       if ! $(${validation_function} "${result_var}")
       then
         unset "${result_name}"
       fi
     fi
-    [ -z "${result_var}" ] || break
+    [ -z "${result_var:-}" ] || break
   done
 }
 
@@ -77,10 +78,10 @@ function check_yes () {
 
 check_numeric () {
   local type=$1
-  local -i nbr=$2
-  local -i min=$3
-  local -i max=$4
-  local quiet=$5
+  local nbr=$2
+  local -i min=${3:-0}
+  local -i max=${4:-255}
+  local quiet=${5:-}
 
   if [ -z "${type}" ]
   then
@@ -93,22 +94,18 @@ check_numeric () {
     return 1
   fi
 
-  if [ -z "${min}" ]
-  then
-    min=0
-  fi
-
-  if [ -z "${max}" ]
-  then
-    max=255
-  fi
-
   if [ -z "${quiet}" ]
   then
     quiet=true
   fi
 
-  if [ ${nbr} -lt ${min} ] || [ ${nbr} -gt ${max} ]
+  if ! [[ "${nbr}" =~ ^-?[0-9]+$ ]]
+  then
+    echo "Invalid ${type} '${nbr}', must be numeric" >&2
+    return 1
+  fi
+
+  if [ "${nbr}" -lt "${min}" ] || [ "${nbr}" -gt "${max}" ]
   then
     echo "Invalid ${type} '${nbr}', must be in the range ${min}-${max}" >&2
     return 1
@@ -134,7 +131,7 @@ check_ip_addr () {
     return 1
   fi
 
-  local min
+  local min=0
   for i in "${!octets[@]}"
   do
     if [ ${i} -eq 0 ]
@@ -164,33 +161,92 @@ check_ip_prefix () {
   return 1
 }
 
+check_vlan () {
+  local -i vlan=$1
+
+  if check_numeric "VLAN tag" ${vlan} 1 4094
+  then
+    return 0
+  fi
+
+  return 1
+}
+
+check_ula_prefix () {
+  local prefix=$1
+
+  if [ -z "${prefix}" ]
+  then
+    echo "You must provide a ULA prefix" >&2
+    return 1
+  fi
+
+  if ! [[ "${prefix}" =~ ^[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}$ ]]
+  then
+    echo "Invalid ULA prefix '${prefix}', expected 3 colon-separated hex groups (e.g. fdc1:e344:ba0a)" >&2
+    return 1
+  fi
+
+  return 0
+}
+
+# Our IPv6 addressing convention encodes the IPv4 address directly into the host
+# part of the address, e.g. 10.2.2.100 on VLAN 12 with ULA prefix fdc1:e344:ba0a
+# becomes fdc1:e344:ba0a:12:10:2:2:100
+ipv6_encode () {
+  local prefix=$1
+  local ipv4=$2
+  local vlan=$3
+
+  echo "${prefix}:${vlan}:${ipv4//./:}"
+}
+
 if [ ${EUID} -ne 0 ]
 then
   echo "You must run as root" >&2
   exit 1
 fi
 
+# The following defaults reflect my own network. If you're using this script outside of it,
+# change these values (or override them at the prompts below) to match your own network.
 dns_server1=10.0.0.3
 dns_server2=10.0.0.4
 gateway=10.2.2.1
 domain=internal.curnowtopia.com
+# DNS servers live on VLAN 1 on my network, regardless of which VLAN a given host is on
+dns_vlan=1
+# This is a ULA (Unique Local Address, RFC 4193) prefix that's private to my network - do not
+# reuse this one, generate your own instead (e.g. https://www.unique-local-ipv6.com/)
+ula_prefix=fdc1:e344:ba0a
 
 prompt "Enter the new hostname" hostname
 prompt "Enter the new IP address" ip_addr check_ip_addr
 prompt "Enter the IP prefix length" ip_prefix check_ip_prefix "24"
+prompt "Enter the VLAN tag for this network" vlan check_vlan
+prompt "Enter the IPv6 ULA prefix" ula_prefix check_ula_prefix "${ula_prefix}"
 prompt "Enter the gatway address" gateway check_ip_addr "${gateway}"
 prompt "Enter the first DNS server" dns_server1 check_ip_addr "${dns_server1}"
 prompt "Enter the second DNS server" dns_server2 check_ip_addr "${dns_server2}"
 prompt "Enter the DNS search domain" domain check_yes "${domain}"
+
+ipv6_addr=$(ipv6_encode "${ula_prefix}" "${ip_addr}" "${vlan}")
+ipv6_gateway=$(ipv6_encode "${ula_prefix}" "${gateway}" "${vlan}")
+dns_server1_v6=$(ipv6_encode "${ula_prefix}" "${dns_server1}" "${dns_vlan}")
+dns_server2_v6=$(ipv6_encode "${ula_prefix}" "${dns_server2}" "${dns_vlan}")
+
 cat <<EOF
 ---------------------------------------------------------------------------
 New VM Config:
   IP Address: ${ip_addr}/${ip_prefix}
+  IPv6 Address: ${ipv6_addr}/64
+  VLAN: ${vlan}
+  IPv6 ULA Prefix: ${ula_prefix}
   Gateway: ${gateway}
+  IPv6 Gateway: ${ipv6_gateway}
   Hostname: ${hostname}
   DNS Servers:
-    ${dns_server1}
-    ${dns_server2}
+    ${dns_server1} / ${dns_server1_v6}
+    ${dns_server2} / ${dns_server2_v6}
   DNS Search Domain: ${domain}
 ---------------------------------------------------------------------------
 EOF
@@ -200,7 +256,7 @@ then
 fi
 
 echo "Removing existing network config"
-rm /etc/systemd/network/*.network
+rm -f /etc/systemd/network/*.network
 
 echo "Creating network config for ens18"
 cat <<EOF > /etc/systemd/network/10-ens18.network
@@ -208,15 +264,22 @@ cat <<EOF > /etc/systemd/network/10-ens18.network
 Name=ens18
 
 [Network]
-# Do not provision an ipv6 address
-IPv6LinkLocalAddressGenerationMode=none
-DNS=${dns_server1}
-DNS=${dns_server2}
 Address=${ip_addr}/${ip_prefix}
+Address=${ipv6_addr}/64
+DNS=${dns_server1}
+DNS=${dns_server1_v6}
+DNS=${dns_server2}
+DNS=${dns_server2_v6}
 Domains=${domain}
-
-[Route]
 Gateway=${gateway}
+Gateway=${ipv6_gateway}
+
+# This section ensures that we only get the static address for this prefix (we want the GUA, just not the ULA)
+# Without this, we will get both our static address and the dynamic SLAAC address for that prefix and Linux will
+# prefer the dynamic, privacy enhanced address. This causes issues because the firewall does not know about that
+# address and will block all the traffic
+[IPv6AcceptRA]
+PrefixDenyList=${ula_prefix}::/48
 EOF
 
 echo "Updating hostname"
@@ -231,6 +294,7 @@ echo "Regenerating /etc/machine-id"
 /usr/bin/systemd-machine-id-setup
 
 echo "Regenerating SSH host keys"
+rm -f /etc/ssh/ssh_host_*
 ssh-keygen -A
 
 cat <<EOF
