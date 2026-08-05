@@ -79,12 +79,11 @@ Domains=${domain}
 Gateway=${templateGateway}
 Gateway=${templateGatewayIpv6}
 
-# This section ensures that we only get the static address for this prefix (we want the GUA, just not the ULA)
-# Without this, we will get both our static address and the dynamic SLAAC address for that prefix and Linux will
-# prefer the dynamic, privacy enhanced address. This causes issues because the firewall does not know about that
-# address and will block all the traffic
-[IPv6AcceptRA]
-PrefixDenyList=${ulaPrefix}::/48
+# The template has no machine-id (cleared below), which breaks the DHCPv6 client's ability to
+# generate a DUID. The router advertises a GUA prefix, so accepting RAs here would trigger DHCPv6
+# and fail. The static addresses above are all this VM needs before it's shut down and templated,
+# so just don't accept RAs at all.
+IPv6AcceptRA=no
 EOF
 
 echo "Generating a new SSH keys"

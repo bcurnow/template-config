@@ -273,13 +273,6 @@ DNS=${dns_server2_v6}
 Domains=${domain}
 Gateway=${gateway}
 Gateway=${ipv6_gateway}
-
-# This section ensures that we only get the static address for this prefix (we want the GUA, just not the ULA)
-# Without this, we will get both our static address and the dynamic SLAAC address for that prefix and Linux will
-# prefer the dynamic, privacy enhanced address. This causes issues because the firewall does not know about that
-# address and will block all the traffic
-[IPv6AcceptRA]
-PrefixDenyList=${ula_prefix}::/48
 EOF
 
 echo "Updating hostname"

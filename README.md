@@ -23,7 +23,10 @@ Scripts to help configure my Proxmox template VMs and the VMs cloned from them.
 
 - **templatize.sh** - run on the golden VM before converting it to a template. Clears the
   machine-id, SSH host keys, package caches, user history/SSH state, logs, DHCP leases, and the
-  systemd random seed, then sets a placeholder network config and shuts the VM down.
+  systemd random seed, then sets a placeholder network config and shuts the VM down. The
+  placeholder config disables IPv6 RA acceptance (`IPv6AcceptRA=no`) since the template has no
+  machine-id at this point and accepting the router's RA would trigger a DHCPv6 client that needs
+  one to generate a DUID.
 - **config.sh** - run as root on a freshly cloned VM. Interactively prompts for hostname, IPv4
   address/prefix/VLAN/gateway, DNS, and the IPv6 ULA prefix (see below), writes the network config
   (IPv4 and IPv6), regenerates the machine-id and SSH host keys, and reboots.
@@ -58,16 +61,3 @@ prefix (defaulting to mine, for my own convenience - override it if you're not m
 IPv4 address, gateway, and VLAN tag, and computes the IPv6 values automatically. `templatize.sh`
 holds all of these as variables (`ulaPrefix`, `templateIp`, `dnsServer1`, `domain`, etc.) near the
 top of the file with a comment marking them as network-specific - edit them there before running.
-
-Each host's network config also includes:
-
-```
-[IPv6AcceptRA]
-PrefixDenyList=<ULA prefix>::/48
-```
-
-Without this, the VM's kernel will *also* autoconfigure a second, dynamic SLAAC address in the
-same ULA `/48` range from router advertisements, in addition to the static one above. Linux then
-tends to prefer the dynamic address as the source for outbound connections - but the firewall only
-knows about the static address, so outbound IPv6 connections get silently blocked. This directive
-stops the kernel from creating that second address in the first place.
