@@ -230,7 +230,6 @@ prompt "Enter the second DNS server" dns_server2 check_ip_addr "${dns_server2}"
 prompt "Enter the DNS search domain" domain check_yes "${domain}"
 
 ipv6_addr=$(ipv6_encode "${ula_prefix}" "${ip_addr}" "${vlan}")
-ipv6_gateway=$(ipv6_encode "${ula_prefix}" "${gateway}" "${vlan}")
 dns_server1_v6=$(ipv6_encode "${ula_prefix}" "${dns_server1}" "${dns_vlan}")
 dns_server2_v6=$(ipv6_encode "${ula_prefix}" "${dns_server2}" "${dns_vlan}")
 
@@ -242,7 +241,6 @@ New VM Config:
   VLAN: ${vlan}
   IPv6 ULA Prefix: ${ula_prefix}
   Gateway: ${gateway}
-  IPv6 Gateway: ${ipv6_gateway}
   Hostname: ${hostname}
   DNS Servers:
     ${dns_server1} / ${dns_server1_v6}
@@ -272,7 +270,6 @@ DNS=${dns_server2}
 DNS=${dns_server2_v6}
 Domains=${domain}
 Gateway=${gateway}
-Gateway=${ipv6_gateway}
 EOF
 
 echo "Updating hostname"
