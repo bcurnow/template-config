@@ -277,7 +277,7 @@ echo "${hostname}" > /etc/hostname
 
 echo "Updating /etc/hosts"
 cat <<EOF > /etc/hosts
-127.0.0.1	${hostname}.${domain} ${hostname} localhost
+127.0.0.1	${hostname}.${domain} ${hostname} localhost # managed by ansible
 EOF
 
 echo "Regenerating /etc/machine-id"
