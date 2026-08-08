@@ -56,7 +56,7 @@ echo "debian-template" | sudo tee /etc/hostname >/dev/null
 
 echo "Updating /etc/hosts"
 sudo tee /etc/hosts >/dev/null << EOF
-127.0.0.1	debian-template.${domain} debian-template localhost # managed by ansible
+127.0.0.1 debian-template.${domain} debian-template localhost # managed by ansible
 EOF
 
 echo "Clearing the machine id"
