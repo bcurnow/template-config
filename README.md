@@ -24,9 +24,10 @@ Scripts to help configure my Proxmox template VMs and the VMs cloned from them.
 - **templatize.sh** - run on the golden VM before converting it to a template. Clears the
   machine-id, SSH host keys, package caches, user history/SSH state, logs, DHCP leases, and the
   systemd random seed, then sets a placeholder network config and shuts the VM down. The
-  placeholder config disables IPv6 RA acceptance (`IPv6AcceptRA=no`) since the template has no
+  placeholder config is IPv4-only (`LinkLocalAddressing=ipv4`) since the template has no
   machine-id at this point and accepting the router's RA would trigger a DHCPv6 client that needs
-  one to generate a DUID.
+  one to generate a DUID - IPv4 alone is enough to reach the internet for the bootstrap `apt
+  update` this network exists for.
 - **config.sh** - run as root on a freshly cloned VM. Interactively prompts for hostname, IPv4
   address/prefix/VLAN/gateway, DNS, and the IPv6 ULA prefix (see below), writes the network config
   (IPv4 and IPv6), regenerates the machine-id and SSH host keys, and reboots.
@@ -58,6 +59,7 @@ VLAN the host itself is on.
 meant to be randomly generated so that two networks are unlikely to collide if ever connected
 (e.g. generate your own at https://www.unique-local-ipv6.com/). `config.sh` prompts for the ULA
 prefix (defaulting to mine, for my own convenience - override it if you're not me) along with the
-IPv4 address, gateway, and VLAN tag, and computes the IPv6 values automatically. `templatize.sh`
-holds all of these as variables (`ulaPrefix`, `templateIp`, `dnsServer1`, `domain`, etc.) near the
-top of the file with a comment marking them as network-specific - edit them there before running.
+IPv4 address, gateway, and VLAN tag, and computes the IPv6 values automatically. `templatize.sh`'s
+placeholder network is IPv4-only (see above), so it has no ULA prefix of its own - it holds its
+other settings as variables (`templateIp`, `dnsServer1`, `domain`, etc.) near the top of the file
+with a comment marking them as network-specific - edit them there before running.

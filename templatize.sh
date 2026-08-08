@@ -18,29 +18,6 @@ templateGateway=10.2.2.1
 dnsServer1=10.2.5.10
 dnsServer2=10.2.5.11
 domain=internal.curnowtopia.com
-vlan=12
-# DNS servers live on the Infra Services VLAN (5) on my network, regardless of which VLAN a
-# given host is on
-dnsVlan=5
-# This is a ULA (Unique Local Address, RFC 4193) prefix that's private to my network - do not
-# reuse this one, generate your own instead (e.g. https://www.unique-local-ipv6.com/)
-ulaPrefix=fdc1:e344:ba0a
-
-# Our IPv6 addressing convention encodes the IPv4 address directly into the host
-# part of the address, e.g. 10.2.2.100 on VLAN 12 with ULA prefix fdc1:e344:ba0a
-# becomes fdc1:e344:ba0a:12:10:2:2:100
-ipv6_encode () {
-  local prefix=$1
-  local ipv4=$2
-  local vlan=$3
-
-  echo "${prefix}:${vlan}:${ipv4//./:}"
-}
-
-templateIpv6=$(ipv6_encode "${ulaPrefix}" "${templateIp}" "${vlan}")
-templateGatewayIpv6=$(ipv6_encode "${ulaPrefix}" "${templateGateway}" "${vlan}")
-dnsServer1Ipv6=$(ipv6_encode "${ulaPrefix}" "${dnsServer1}" "${dnsVlan}")
-dnsServer2Ipv6=$(ipv6_encode "${ulaPrefix}" "${dnsServer2}" "${dnsVlan}")
 
 cat <<EOF
 Please ensure the following commands are run as ${defaultUser} before executing:
@@ -73,20 +50,17 @@ Name=ens18
 
 [Network]
 Address=${templateIp}/${templatePrefix}
-Address=${templateIpv6}/64
-DNS=${dnsServer1}
-DNS=${dnsServer1Ipv6}
-DNS=${dnsServer2}
-DNS=${dnsServer2Ipv6}
+DNS=${dnsServer1}#dns1.${domain}
+DNS=${dnsServer2}#dns2.${domain}
 Domains=${domain}
 Gateway=${templateGateway}
-Gateway=${templateGatewayIpv6}
+DNSOverTLS=yes
 
 # The template has no machine-id (cleared below), which breaks the DHCPv6 client's ability to
-# generate a DUID. The router advertises a GUA prefix, so accepting RAs here would trigger DHCPv6
-# and fail. The static addresses above are all this VM needs before it's shut down and templated,
-# so just don't accept RAs at all.
-IPv6AcceptRA=no
+# generate a DUID, and accepting RAs here would trigger DHCPv6. Rather than juggle that for a
+# network that only needs to last long enough to run apt update, just disable IPv6 on this link
+# entirely - IPv4 alone is enough to configure the template.
+LinkLocalAddressing=ipv4
 EOF
 
 echo "Generating a new SSH keys"
