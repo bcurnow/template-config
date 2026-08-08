@@ -15,12 +15,13 @@ ansibleAuthorizedKey="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICr9R4/zGU4rw1C1+MgWLy
 templateIp=10.2.2.224
 templatePrefix=24
 templateGateway=10.2.2.1
-dnsServer1=10.0.0.3
-dnsServer2=10.0.0.4
+dnsServer1=10.2.5.10
+dnsServer2=10.2.5.11
 domain=internal.curnowtopia.com
 vlan=12
-# DNS servers live on VLAN 1 on my network, regardless of which VLAN a given host is on
-dnsVlan=1
+# DNS servers live on the Infra Services VLAN (5) on my network, regardless of which VLAN a
+# given host is on
+dnsVlan=5
 # This is a ULA (Unique Local Address, RFC 4193) prefix that's private to my network - do not
 # reuse this one, generate your own instead (e.g. https://www.unique-local-ipv6.com/)
 ulaPrefix=fdc1:e344:ba0a

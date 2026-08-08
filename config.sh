@@ -209,12 +209,13 @@ fi
 
 # The following defaults reflect my own network. If you're using this script outside of it,
 # change these values (or override them at the prompts below) to match your own network.
-dns_server1=10.0.0.3
-dns_server2=10.0.0.4
+dns_server1=10.2.5.10
+dns_server2=10.2.5.11
 gateway=10.2.2.1
 domain=internal.curnowtopia.com
-# DNS servers live on VLAN 1 on my network, regardless of which VLAN a given host is on
-dns_vlan=1
+# DNS servers live on the Infra Services VLAN (5) on my network, regardless of which VLAN a
+# given host is on
+dns_vlan=5
 # This is a ULA (Unique Local Address, RFC 4193) prefix that's private to my network - do not
 # reuse this one, generate your own instead (e.g. https://www.unique-local-ipv6.com/)
 ula_prefix=fdc1:e344:ba0a
