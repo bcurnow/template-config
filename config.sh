@@ -191,8 +191,8 @@ check_ula_prefix () {
 }
 
 # Our IPv6 addressing convention encodes the IPv4 address directly into the host
-# part of the address, e.g. 10.2.2.100 on VLAN 12 with ULA prefix fdc1:e344:ba0a
-# becomes fdc1:e344:ba0a:12:10:2:2:100
+# part of the address, e.g. 10.2.12.100 on VLAN 12 with ULA prefix fdc1:e344:ba0a
+# becomes fdc1:e344:ba0a:12:10:2:12:100
 ipv6_encode () {
   local prefix=$1
   local ipv4=$2
@@ -211,7 +211,7 @@ fi
 # change these values (or override them at the prompts below) to match your own network.
 dns_server1=10.2.5.10
 dns_server2=10.2.5.11
-gateway=10.2.2.1
+gateway=10.2.12.1
 domain=internal.curnowtopia.com
 # DNS servers live on the Infra Services VLAN (5) on my network, regardless of which VLAN a
 # given host is on

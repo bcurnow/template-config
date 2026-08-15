@@ -50,7 +50,7 @@ readability:
 ```
 
 For example, with the ULA prefix `fdc1:e344:ba0a` (my own network's prefix, used as the default
-below), `10.2.2.100` on VLAN `12` becomes `fdc1:e344:ba0a:12:10:2:2:100`. The gateway uses the same
+below), `10.2.12.100` on VLAN `12` becomes `fdc1:e344:ba0a:12:10:2:12:100`. The gateway uses the same
 encoding as the host's own address (same VLAN, IPv4 gateway's octets), since a default gateway
 must be on-link with the host's own prefix. DNS servers always use VLAN `1`, regardless of which
 VLAN the host itself is on.

@@ -12,9 +12,9 @@ ansibleAuthorizedKey="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICr9R4/zGU4rw1C1+MgWLy
 
 # The following network settings reflect my own network. If you're using this script outside of
 # it, change these values to match your own network before running it.
-templateIp=10.2.2.224
+templateIp=10.2.12.224
 templatePrefix=24
-templateGateway=10.2.2.1
+templateGateway=10.2.12.1
 dnsServer1=10.2.5.10
 dnsServer2=10.2.5.11
 domain=internal.curnowtopia.com
