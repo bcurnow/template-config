@@ -56,9 +56,6 @@ dnsServer1=10.2.5.10
 dnsServer2=10.2.5.11
 domain=internal.curnowtopia.com
 
-read -p "Press any key to continue..." -n 1 -r
-echo ""
-
 # Everything below runs in a subshell so 'set -euo pipefail' can't tear down the interactive
 # shell we were sourced into if a command fails - a failure here just returns a non-zero status
 # to the check below instead of killing your session.
