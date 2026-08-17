@@ -320,11 +320,9 @@ ssh-keygen -A
 
 cat <<EOF
 Cleaning out /opt/template-config
-If you need to redownload, run the following:
-  sudo mkdir -p /opt/template-config
-  sudo curl --silent -o /opt/template-config/get-latest-version.sh --location https://github.com/bcurnow/template-config/raw/main/get-latest-version.sh
-  sudo chmod 755 /opt/template-config/get-latest-version.sh
-  sudo /opt/template-config/get-latest-version.sh
+If you need to re-run anything, scp the updated scripts from your workstation instead of
+redownloading them here - this VM isn't guaranteed to have curl (or any other network client)
+installed.
 EOF
 
 read -p "Press any key to reboot..." -n 1 -r

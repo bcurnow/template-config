@@ -13,11 +13,19 @@ Scripts to help configure my Proxmox template VMs and the VMs cloned from them.
    host-specific state and shut it down. Convert the resulting disk into a Proxmox template.
 2. Clone a new VM from the template, boot it, and run `config.sh` to give it its own hostname,
    addressing, and secrets.
-3. `get-latest-version.sh` fetches the current versions of these scripts onto a VM (used by
-   `config.sh`'s cleanup instructions if you need to re-run anything).
-4. `regenerate-secrets.sh` is a standalone remediation script for VMs that were already cloned
+3. `regenerate-secrets.sh` is a standalone remediation script for VMs that were already cloned
    from a template before host key regeneration worked correctly (see below) - it rotates a live,
    in-service VM's SSH host keys and systemd random seed without touching anything else.
+
+### Getting these scripts onto a VM
+
+The golden/template VMs are built minimal (no guaranteed network client like `curl`), so these
+scripts are never fetched by the guest itself:
+- Normally, `proxmox/build-debian-template.sh` (in the `misc` repo) fetches the current versions
+  straight into the golden VM's target filesystem using the *build host's* `curl`, before the VM
+  ever boots.
+- To update an already-built `debian-template` VM without rebuilding it (e.g. after a
+  `template-config` change), `scp` the updated scripts to `/opt/template-config` on it instead.
 
 ## Scripts
 
@@ -31,13 +39,11 @@ Scripts to help configure my Proxmox template VMs and the VMs cloned from them.
 - **config.sh** - run as root on a freshly cloned VM. Interactively prompts for hostname, IPv4
   address/prefix/VLAN/gateway, DNS, and the IPv6 ULA prefix (see below), writes the network config
   (IPv4 and IPv6), regenerates the machine-id and SSH host keys, and reboots.
-- **get-latest-version.sh** - run as root to download the current `templatize.sh`, `config.sh`,
-  and itself into `/opt/template-config`.
 - **regenerate-secrets.sh** - run as root on an already-configured, in-service VM to rotate its
   SSH host keys and systemd random seed. Safe to run live: existing SSH sessions are unaffected,
   but any client that has previously connected will see a host key mismatch until it refreshes its
-  `known_hosts` (the script prints the new fingerprints and refresh instructions). Not fetched by
-  `get-latest-version.sh` - it's a one-off remediation tool, not part of the normal clone lifecycle.
+  `known_hosts` (the script prints the new fingerprints and refresh instructions). Not part of the
+  golden/clone lifecycle above - a one-off remediation tool, scp it over only when needed.
 
 ## IPv6 addressing convention
 
