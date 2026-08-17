@@ -69,7 +69,7 @@ confirm () {
 
   read -p "${prompt} (Y/n): " -n 1 -r
   echo ""
-  [[ ${REPLY} =~ ^[Yy]$ ]]
+  [[ -z "${REPLY}" || ${REPLY} =~ ^[Yy]$ ]]
 }
 
 function check_yes () {
@@ -226,13 +226,44 @@ prompt "Enter the IP prefix length" ip_prefix check_ip_prefix "24"
 prompt "Enter the VLAN tag for this network" vlan check_vlan
 prompt "Enter the IPv6 ULA prefix" ula_prefix check_ula_prefix "${ula_prefix}"
 prompt "Enter the gatway address" gateway check_ip_addr "${gateway}"
-prompt "Enter the first DNS server" dns_server1 check_ip_addr "${dns_server1}"
-prompt "Enter the second DNS server" dns_server2 check_ip_addr "${dns_server2}"
 prompt "Enter the DNS search domain" domain check_yes "${domain}"
+
+dns_over_tls=yes
+if ! confirm "Use DNS-over-TLS for the DNS servers below?"
+then
+  dns_over_tls=no
+fi
+
+prompt "Enter the first DNS server" dns_server1 check_ip_addr "${dns_server1}"
+if [ "${dns_over_tls}" = "yes" ]
+then
+  prompt "Enter the first DNS server's hostname (used to validate its TLS certificate)" dns_server1_hostname check_yes "ns1.${domain}"
+fi
+
+prompt "Enter the second DNS server" dns_server2 check_ip_addr "${dns_server2}"
+if [ "${dns_over_tls}" = "yes" ]
+then
+  prompt "Enter the second DNS server's hostname (used to validate its TLS certificate)" dns_server2_hostname check_yes "ns2.${domain}"
+fi
 
 ipv6_addr=$(ipv6_encode "${ula_prefix}" "${ip_addr}" "${vlan}")
 dns_server1_v6=$(ipv6_encode "${ula_prefix}" "${dns_server1}" "${dns_vlan}")
 dns_server2_v6=$(ipv6_encode "${ula_prefix}" "${dns_server2}" "${dns_vlan}")
+
+if [ "${dns_over_tls}" = "yes" ]
+then
+  dns_lines="DNS=${dns_server1}#${dns_server1_hostname}
+DNS=${dns_server1_v6}#${dns_server1_hostname}
+DNS=${dns_server2}#${dns_server2_hostname}
+DNS=${dns_server2_v6}#${dns_server2_hostname}"
+  dns_over_tls_line="DNSOverTLS=yes"
+else
+  dns_lines="DNS=${dns_server1}
+DNS=${dns_server1_v6}
+DNS=${dns_server2}
+DNS=${dns_server2_v6}"
+  dns_over_tls_line=""
+fi
 
 cat <<EOF
 ---------------------------------------------------------------------------
@@ -247,6 +278,7 @@ New VM Config:
     ${dns_server1} / ${dns_server1_v6}
     ${dns_server2} / ${dns_server2_v6}
   DNS Search Domain: ${domain}
+  DNS-over-TLS: ${dns_over_tls}
 ---------------------------------------------------------------------------
 EOF
 if ! confirm "Is the above correct?"
@@ -265,13 +297,10 @@ Name=ens18
 [Network]
 Address=${ip_addr}/${ip_prefix}
 Address=${ipv6_addr}/64
-DNS=${dns_server1}#ns1.${domain}
-DNS=${dns_server1_v6}#ns1.${domain}
-DNS=${dns_server2}#ns2.${domain}
-DNS=${dns_server2_v6}#ns2.${domain}
+${dns_lines}
 Domains=${domain}
 Gateway=${gateway}
-DNSOverTLS=yes
+${dns_over_tls_line}
 EOF
 
 echo "Updating hostname"
