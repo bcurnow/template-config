@@ -265,12 +265,13 @@ Name=ens18
 [Network]
 Address=${ip_addr}/${ip_prefix}
 Address=${ipv6_addr}/64
-DNS=${dns_server1}
-DNS=${dns_server1_v6}
-DNS=${dns_server2}
-DNS=${dns_server2_v6}
+DNS=${dns_server1}#ns1.${domain}
+DNS=${dns_server1_v6}#ns1.${domain}
+DNS=${dns_server2}#ns2.${domain}
+DNS=${dns_server2_v6}#ns2.${domain}
 Domains=${domain}
 Gateway=${gateway}
+DNSOverTLS=yes
 EOF
 
 echo "Updating hostname"
