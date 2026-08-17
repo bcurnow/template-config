@@ -320,9 +320,9 @@ ssh-keygen -A
 
 cat <<EOF
 Cleaning out /opt/template-config
-If you need to re-run anything, scp the updated scripts from your workstation instead of
-redownloading them here - this VM isn't guaranteed to have curl (or any other network client)
-installed.
+If you need to re-run anything, use push-scripts.sh from your workstation (e.g.
+./push-scripts.sh ${hostname}) instead of redownloading them here - this VM isn't guaranteed to
+have curl (or any other network client) installed.
 EOF
 
 read -p "Press any key to reboot..." -n 1 -r

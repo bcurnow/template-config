@@ -25,7 +25,8 @@ scripts are never fetched by the guest itself:
   straight into the golden VM's target filesystem using the *build host's* `curl`, before the VM
   ever boots.
 - To update an already-built `debian-template` VM without rebuilding it (e.g. after a
-  `template-config` change), `scp` the updated scripts to `/opt/template-config` on it instead.
+  `template-config` change), run `push-scripts.sh [host]` (defaults to `debian-template`) from
+  your workstation - it scp's `templatize.sh`/`config.sh` over and fixes ownership/permissions.
 
 ## Scripts
 
@@ -39,6 +40,10 @@ scripts are never fetched by the guest itself:
 - **config.sh** - run as root on a freshly cloned VM. Interactively prompts for hostname, IPv4
   address/prefix/VLAN/gateway, DNS, and the IPv6 ULA prefix (see below), writes the network config
   (IPv4 and IPv6), regenerates the machine-id and SSH host keys, and reboots.
+- **push-scripts.sh** - run from your workstation to scp the current `templatize.sh`/`config.sh`
+  onto a target VM's `/opt/template-config` (defaults to `debian-template`). See "Getting these
+  scripts onto a VM" above - not fetched by `build-debian-template.sh`, never ends up on a
+  template or a clone.
 - **regenerate-secrets.sh** - run as root on an already-configured, in-service VM to rotate its
   SSH host keys and systemd random seed. Safe to run live: existing SSH sessions are unaffected,
   but any client that has previously connected will see a host key mismatch until it refreshes its
