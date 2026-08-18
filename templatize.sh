@@ -71,7 +71,10 @@ if ! (
 EOF
 
   echo "Clearing the machine id"
-  sudo rm -f /etc/machine-id
+  # /var/lib/dbus/machine-id is a separate file here, not a symlink to /etc/machine-id - if left
+  # behind, systemd-machine-id-setup finds it on a clone's first boot and reuses it as a fallback
+  # instead of generating a fresh ID, baking one shared ID into every VM cloned from this template.
+  sudo rm -f /etc/machine-id /var/lib/dbus/machine-id
 
   echo "Removing systemd-networkd configurations"
   sudo rm -f /etc/systemd/network/*.network

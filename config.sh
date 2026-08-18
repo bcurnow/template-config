@@ -312,7 +312,17 @@ cat <<EOF > /etc/hosts
 EOF
 
 echo "Regenerating /etc/machine-id"
+# Force regeneration rather than relying on systemd-machine-id-setup's "only if unset" behavior -
+# a clone's /etc/machine-id is normally already empty (cleared by templatize.sh), but if that
+# ever isn't true (e.g. a clone taken from an already-provisioned VM instead of the golden
+# template), this must not silently keep the source VM's ID. /var/lib/dbus/machine-id is cleared
+# too: it's a separate file here (not a symlink to /etc/machine-id), and when present,
+# systemd-machine-id-setup reuses it as a fallback instead of generating a fresh ID - found via
+# three VMs cloned from the 2026-08-16 template all sharing one machine-id baked into this file
+# at debootstrap build time, which templatize.sh's own cleanup never touched.
+rm -f /etc/machine-id /var/lib/dbus/machine-id
 /usr/bin/systemd-machine-id-setup
+dbus-uuidgen --ensure
 
 echo "Regenerating SSH host keys"
 rm -f /etc/ssh/ssh_host_*
