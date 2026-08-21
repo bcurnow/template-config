@@ -37,6 +37,18 @@ scripts are never fetched by the guest itself:
   machine-id at this point and accepting the router's RA would trigger a DHCPv6 client that needs
   one to generate a DUID - IPv4 alone is enough to reach the internet for the bootstrap `apt
   update` this network exists for.
+
+  Clearing `/etc/machine-id` here only fixes half the problem: on this systemd-boot (BLS)
+  golden image, `misc/proxmox/build-debian-template.sh` pins `/etc/kernel/entry-token` to a
+  static `debian` string *before* it first calls `kernel-install add`, in the chroot, ahead of
+  where this script ever runs. Without that pin, `kernel-install` falls back to machine-id as
+  the boot entry's token, generates one on the spot (since none exists yet at that point), and
+  bakes it into the entry's kernel cmdline as `systemd.machine_id=<id>` - which unconditionally
+  overwrites `/etc/machine-id` on every boot, for every VM cloned from that one template,
+  regardless of what this script or `config.sh` set it to. See
+  `misc/proxmox/machine-id-boot-entry-plan.md` for the full writeup. If you're adapting these
+  scripts for a different template build pipeline, make sure whatever builds your golden image
+  does the same before its first `kernel-install add`.
 - **config.sh** - run as root on a freshly cloned VM. Interactively prompts for hostname, IPv4
   address/prefix/VLAN/gateway, DNS, and the IPv6 ULA prefix (see below), writes the network config
   (IPv4 and IPv6), regenerates the machine-id and SSH host keys, and reboots.
