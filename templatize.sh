@@ -76,12 +76,6 @@ EOF
   # instead of generating a fresh ID, baking one shared ID into every VM cloned from this template.
   sudo rm -f /etc/machine-id /var/lib/dbus/machine-id
 
-  echo "Clearing any pinned default boot entry"
-  # A LoaderEntryDefault EFI variable overrides systemd-boot's newest-version sort, and it lives in
-  # the VM's EFI disk, which Proxmox copies into every clone - so a clone would keep booting the
-  # kernel this entry names even after newer kernels get installed.
-  sudo bootctl set-default ""
-
   echo "Removing systemd-networkd configurations"
   sudo rm -f /etc/systemd/network/*.network
 
