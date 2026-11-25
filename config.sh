@@ -250,18 +250,20 @@ ipv6_addr=$(ipv6_encode "${ula_prefix}" "${ip_addr}" "${vlan}")
 dns_server1_v6=$(ipv6_encode "${ula_prefix}" "${dns_server1}" "${dns_vlan}")
 dns_server2_v6=$(ipv6_encode "${ula_prefix}" "${dns_server2}" "${dns_vlan}")
 
+# IPv6 first: systemd-resolved queries one server at a time, starting with the first listed, so
+# the IPv4 addresses are only used if the IPv6 ones stop answering.
 if [ "${dns_over_tls}" = "yes" ]
 then
-  dns_lines="DNS=${dns_server1}#${dns_server1_hostname}
-DNS=${dns_server1_v6}#${dns_server1_hostname}
-DNS=${dns_server2}#${dns_server2_hostname}
-DNS=${dns_server2_v6}#${dns_server2_hostname}"
+  dns_lines="DNS=${dns_server1_v6}#${dns_server1_hostname}
+DNS=${dns_server2_v6}#${dns_server2_hostname}
+DNS=${dns_server1}#${dns_server1_hostname}
+DNS=${dns_server2}#${dns_server2_hostname}"
   dns_over_tls_line="DNSOverTLS=yes"
 else
-  dns_lines="DNS=${dns_server1}
-DNS=${dns_server1_v6}
-DNS=${dns_server2}
-DNS=${dns_server2_v6}"
+  dns_lines="DNS=${dns_server1_v6}
+DNS=${dns_server2_v6}
+DNS=${dns_server1}
+DNS=${dns_server2}"
   dns_over_tls_line=""
 fi
 
