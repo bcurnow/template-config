@@ -33,10 +33,10 @@ scripts are never fetched by the guest itself:
 - **templatize.sh** - run on the golden VM before converting it to a template. Clears the
   machine-id, SSH host keys, package caches, user history/SSH state, logs, DHCP leases, and the
   systemd random seed, then sets a placeholder network config and shuts the VM down. The
-  placeholder config is IPv4-only (`LinkLocalAddressing=ipv4`) since the template has no
-  machine-id at this point and accepting the router's RA would trigger a DHCPv6 client that needs
-  one to generate a DUID - IPv4 alone is enough to reach the internet for the bootstrap `apt
-  update` this network exists for.
+  placeholder config is dual-stack with static addresses: an IPv4 address and a ULA address
+  built by the convention below, each with its own gateway. It sets `IPv6AcceptRA=no` because the
+  template has no machine-id at this point and accepting the router's RA would trigger a DHCPv6
+  client that needs one to generate a DUID.
 
   Clearing `/etc/machine-id` here only fixes half the problem: on this systemd-boot (BLS)
   golden image, `misc/proxmox/build-debian-template.sh` pins `/etc/kernel/entry-token` to a
@@ -82,7 +82,7 @@ VLAN the host itself is on.
 meant to be randomly generated so that two networks are unlikely to collide if ever connected
 (e.g. generate your own at https://www.unique-local-ipv6.com/). `config.sh` prompts for the ULA
 prefix (defaulting to mine, for my own convenience - override it if you're not me) along with the
-IPv4 address, gateway, and VLAN tag, and computes the IPv6 values automatically. `templatize.sh`'s
-placeholder network is IPv4-only (see above), so it has no ULA prefix of its own - it holds its
-other settings as variables (`templateIp`, `dnsServer1`, `domain`, etc.) near the top of the file
-with a comment marking them as network-specific - edit them there before running.
+IPv4 address, gateway, and VLAN tag, and computes the IPv6 values automatically. `templatize.sh`
+holds its own settings as variables (`ulaPrefix`, `templateIp`, `templateVlan`, `dnsServer1`,
+`domain`, etc.) near the top of the file with a comment marking them as network-specific - edit
+them there before running.

@@ -52,9 +52,23 @@ ansibleAuthorizedKey="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICr9R4/zGU4rw1C1+MgWLy
 templateIp=10.2.12.224
 templatePrefix=24
 templateGateway=10.2.12.1
+templateVlan=12
 dnsServer1=10.2.5.10
 dnsServer2=10.2.5.11
+# DNS servers live on VLAN 5 regardless of which VLAN a host is on (same convention as config.sh)
+dnsVlan=5
 domain=internal.curnowtopia.com
+# Private ULA prefix (see README.md, "IPv6 addressing convention"); generate your own
+ulaPrefix=fdc1:e344:ba0a
+
+# Same encoding as config.sh's ipv6_encode: <ULA prefix>:<VLAN tag>:<IPv4 octets separated by colons>
+ipv6Encode () {
+  echo "${ulaPrefix}:${2}:${1//./:}"
+}
+templateIpv6=$(ipv6Encode "${templateIp}" "${templateVlan}")
+templateGatewayIpv6=$(ipv6Encode "${templateGateway}" "${templateVlan}")
+dnsServer1Ipv6=$(ipv6Encode "${dnsServer1}" "${dnsVlan}")
+dnsServer2Ipv6=$(ipv6Encode "${dnsServer2}" "${dnsVlan}")
 
 # Everything below runs in a subshell so 'set -euo pipefail' can't tear down the interactive
 # shell we were sourced into if a command fails - a failure here just returns a non-zero status
@@ -86,17 +100,20 @@ Name=ens18
 
 [Network]
 Address=${templateIp}/${templatePrefix}
+Address=${templateIpv6}/64
+DNS=${dnsServer1Ipv6}#ns1.${domain}
+DNS=${dnsServer2Ipv6}#ns2.${domain}
 DNS=${dnsServer1}#ns1.${domain}
 DNS=${dnsServer2}#ns2.${domain}
 Domains=${domain}
 Gateway=${templateGateway}
+Gateway=${templateGatewayIpv6}
 DNSOverTLS=yes
 
 # The template has no machine-id (cleared below), which breaks the DHCPv6 client's ability to
-# generate a DUID, and accepting RAs here would trigger DHCPv6. Rather than juggle that for a
-# network that only needs to last long enough to run apt update, just disable IPv6 on this link
-# entirely - IPv4 alone is enough to configure the template.
-LinkLocalAddressing=ipv4
+# generate a DUID, and accepting RAs here would trigger DHCPv6. So RAs are ignored: the static
+# ULA address and gateway above give the template IPv6 without them.
+IPv6AcceptRA=no
 EOF
 
   echo "Generating a new SSH keys"
