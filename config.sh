@@ -172,6 +172,17 @@ check_vlan () {
   return 1
 }
 
+check_mtu () {
+  local -i mtu=$1
+
+  if check_numeric "MTU" ${mtu} 1500 9000
+  then
+    return 0
+  fi
+
+  return 1
+}
+
 check_ula_prefix () {
   local prefix=$1
 
@@ -224,6 +235,7 @@ prompt "Enter the new hostname" hostname
 prompt "Enter the new IP address" ip_addr check_ip_addr
 prompt "Enter the IP prefix length" ip_prefix check_ip_prefix "24"
 prompt "Enter the VLAN tag for this network" vlan check_vlan
+prompt "Enter the link MTU (9000 only if every host on this VLAN can do jumbo frames)" mtu check_mtu "1500"
 prompt "Enter the IPv6 ULA prefix" ula_prefix check_ula_prefix "${ula_prefix}"
 prompt "Enter the gatway address" gateway check_ip_addr "${gateway}"
 prompt "Enter the DNS search domain" domain check_yes "${domain}"
@@ -273,6 +285,7 @@ New VM Config:
   IP Address: ${ip_addr}/${ip_prefix}
   IPv6 Address: ${ipv6_addr}/64
   VLAN: ${vlan}
+  MTU: ${mtu}
   IPv6 ULA Prefix: ${ula_prefix}
   Gateway: ${gateway}
   Hostname: ${hostname}
@@ -291,18 +304,37 @@ fi
 echo "Removing existing network config"
 rm -f /etc/systemd/network/*.network
 
+# An RA from the firewall can only advertise 1280 (the 6rd tunnel), and a jumbo host must ignore it.
+if [ "${mtu}" -gt 1500 ]
+then
+  link_lines="[Link]
+MTUBytes=${mtu}
+
+"
+  mtu_lines="IPv6MTUBytes=${mtu}"
+  ra_lines="
+[IPv6AcceptRA]
+UseMTU=no"
+else
+  link_lines=""
+  mtu_lines=""
+  ra_lines=""
+fi
+
 echo "Creating network config for ens18"
 cat <<EOF > /etc/systemd/network/10-ens18.network
 [Match]
 Name=ens18
 
-[Network]
+${link_lines}[Network]
+${mtu_lines}
 Address=${ip_addr}/${ip_prefix}
 Address=${ipv6_addr}/64
 ${dns_lines}
 Domains=${domain}
 Gateway=${gateway}
 ${dns_over_tls_line}
+${ra_lines}
 EOF
 
 echo "Updating hostname"
